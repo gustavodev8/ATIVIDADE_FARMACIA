@@ -11,17 +11,17 @@ function App() {
     e.preventDefault();
     axios.post('http://localhost:3000/cadastrar', { nome, email, senha })
       .then(() => {
-        alert("Cadastrado! Agora use o App para ver seus descontos.");
+        alert("vc está cadastrado agora use o app para ver os descontos.");
         setNome(''); setEmail(''); setSenha('');
       })
-      .catch(() => alert("Erro ao cadastrar."));
+      .catch(() => alert("erro ao cadastrar."));
   };
 
   return (
     <div className="corpo">
       <div className="caixa">
         <h1>Farmácia Central </h1>
-        <p>Cadastre-se para ganhar descontos no nosso aplicativo!</p>
+        <p>cadastre-se para ganhar descontos no nosso aplicativo</p>
         
         <form onSubmit={salvar}>
           <input type="text" placeholder="Seu nome" value={nome} onChange={e => setNome(e.target.value)} required />

@@ -11,7 +11,7 @@ export default function App() {
 
   // Função para logar
   const logar = () => {
-    console.log("Tentando logar em: http://172.26.17.143:3000/login");
+    console.log("tentando logar em: http://172.26.17.143:3000/login");
     axios.post('http://172.26.17.143:3000/login', { email, senha })
       .then(res => {
         setUsuarioLogado(res.data);
@@ -50,7 +50,7 @@ export default function App() {
       <View style={styles.containerCentro}>
         <View style={styles.cardLogin}>
           <Text style={styles.headerTitle}>Farmácia Central</Text>
-          <Text style={styles.headerSubtitle}>Acesse sua conta para ver ofertas</Text>
+          <Text style={styles.headerSubtitle}>acesse a conta pra ver as ofertas</Text>
           
           <View style={styles.inputGroup}>
             <Text style={styles.label}>E-mail</Text>

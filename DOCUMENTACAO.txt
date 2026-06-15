@@ -1,0 +1,58 @@
+DOCUMENTACAO DO PROJETO: FARMACIA CENTRAL
+
+1. RESUMO DO PROJETO
+Este projeto e um ecossistema completo de farmacia que integra uma plataforma Web, um Aplicativo Movel e um Servidor Backend. O objetivo principal e a fidelizacao de clientes: o usuario se cadastra no site para ganhar o status de "Cliente Fidelidade" e, ao logar no App, visualiza produtos com descontos exclusivos.
+
+2. ARQUITETURA E INTERLIGACAO
+O sistema funciona de forma integrada:
+- O SITE (React) envia os dados de cadastro para o BACKEND.
+- O BACKEND (Node.js) salva no BANCO DE DADOS (MySQL) e aplica o status de fidelidade.
+- O APP (React Native) solicita o login ao BACKEND.
+- O BACKEND valida o usuario e envia a lista de produtos.
+- O APP verifica se o usuario e VIP e mostra os precos com desconto em verde.
+
+3. FUNCAO DE CADA ARQUIVO PRINCIPAL
+
+RAIZ DO PROJETO:
+- database.sql: Script SQL para criacao automatica do banco de dados, tabelas de usuarios e produtos, alem de inserir itens iniciais para teste.
+
+PASTA farm/servi (BACKEND):
+- index.js: O "coracao" do servidor. Configura a API Express, conecta ao MySQL e define as rotas:
+    * /cadastrar: Salva novos usuarios com senha criptografada.
+    * /login: Autentica o usuario para o App.
+    * /produtos: Fornece a lista de medicamentos e itens da farmacia.
+- package.json: Lista as bibliotecas necessarias (express, mysql2, bcryptjs, cors).
+
+PASTA farm/webvers (SITE/FRONTEND):
+- src/App.jsx: Contem a interface visual do site. E um formulario de cadastro onde o cliente insere Nome, E-mail e Senha. Ao enviar, ele se conecta a API do backend.
+- src/main.jsx: Arquivo de entrada do React que inicializa a aplicacao no navegador.
+- vite.config.js: Configuracao do ambiente de desenvolvimento do site.
+
+PASTA farm/mobvers (APLICATIVO/MOBILE):
+- App.js: Arquivo principal do aplicativo. Contem toda a logica de:
+    * Navegacao entre tela de Login e tela de Produtos.
+    * Consumo da API para validar usuario.
+    * Logica de exibicao: se o usuario for VIP, o App calcula e mostra o preco promocional.
+- app.json: Configuracoes do Expo (nome do app, versao, icones).
+- package.json: Dependencias do aplicativo (react-native, expo, axios).
+
+4. FLUXO DE DADOS
+[Site Web] -> (Dados de Cadastro) -> [Servidor Node.js] -> [Banco MySQL]
+[App Movel] <- (Precos VIP/Normal) <- [Servidor Node.js] <- [Banco MySQL]
+
+5. TECNOLOGIAS UTILIZADAS
+- Linguagem: JavaScript
+- Banco de Dados: MySQL (XAMPP)
+- Backend: Node.js + Express
+- Frontend Web: React.js + Vite
+- Mobile: React Native + Expo
+- Seguranca: BcryptJS (para esconder as senhas no banco)
+
+6. COMO EXECUTAR
+1. Importar 'database.sql' no MySQL.
+2. Iniciar o Servidor: Pasta 'servi' -> 'node index.js'.
+3. Iniciar o Site: Pasta 'webvers' -> 'npm run dev'.
+4. Iniciar o App: Pasta 'mobvers' -> 'npx expo start'.
+
+--------------------------------------------------
+Projeto desenvolvido para apresentacao academica.

@@ -17,7 +17,7 @@ const conexao = mysql.createConnection({
 
 conexao.connect((err) => {
     if (err) console.log("Erro no banco: ", err);
-    else console.log("Banco de Dados Conectado!");
+    else console.log("Banco de Dados Conecctadoo");
 });
 
 // Rota de Cadastro do Site

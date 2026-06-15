@@ -38,7 +38,7 @@ app.post('/cadastrar', (req, res) => {
 app.post('/login', (req, res) => {
     const { email, senha } = req.body;
     conexao.query("SELECT * FROM usuarios WHERE email = ?", [email], (err, results) => {
-        if (err || results.length === 0) return res.status(401).send("Usuário não existe");
+        if (err || results.length === 0) return res.status(401).send("ssuário não existe");
 
         const usuario = results[0];
         const senhaOk = bcrypt.compareSync(senha, usuario.senha);
@@ -58,4 +58,4 @@ app.get('/produtos', (req, res) => {
     });
 });
 
-app.listen(3000, () => console.log("Servidor rodando na porta 3000"));
+app.listen(3000, () => console.log("servidor rna porta 3000"));

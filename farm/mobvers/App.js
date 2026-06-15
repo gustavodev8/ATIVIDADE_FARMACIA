@@ -3,7 +3,7 @@ import { View, Text, TextInput, StyleSheet, FlatList, Alert, TouchableOpacity } 
 import axios from 'axios';
 
 export default function App() {
-  const [tela, setTela] = useState('login'); // Pode ser 'login' ou 'home'
+  const [tela, setTela] = useState('login'); // pode serr tanto  'login' ou 'home'
   const [usuarioLogado, setUsuarioLogado] = useState(null);
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
@@ -11,8 +11,8 @@ export default function App() {
 
   // Função para logar
   const logar = () => {
-    console.log("tentando logar em: http://172.26.17.143:3000/login");
-    axios.post('http://172.26.17.143:3000/login', { email, senha })
+    console.log("tentando logar em: http://172.26.17.99:3000/login");
+    axios.post('http://172.26.17.99:3000/login', { email, senha })
       .then(res => {
         setUsuarioLogado(res.data);
         setTela('home');
@@ -20,17 +20,17 @@ export default function App() {
       .catch((err) => {
         console.log("Erro no login: ", err);
         if (err.response) {
-          // O servidor respondeu com um erro (401, etc)
+          // O servidor deu c erro 
           if (err.response.status === 401) {
-            Alert.alert("Erro de Login", err.response.data); // "Usuário não existe" ou "Senha incorreta"
+            Alert.alert("rrro de Login", err.response.data); // "Usuário não existe" ou "Senha incorreta"
           } else {
-            Alert.alert("Erro", "Erro no servidor: " + err.response.status);
+            Alert.alert("erro", "erro no servidor: " + err.response.status);
           }
         } else if (err.request) {
-          // A requisição foi feita mas não houve resposta (erro de rede/IP)
-          Alert.alert("Erro de Conexão", "Não foi possível conectar ao servidor. Verifique se o IP está correto e se está na mesma rede.");
+          // A requisição foi feita mas nn teve resposta (erro de rede/IP)
+          Alert.alert("erro de Conexão");
         } else {
-          Alert.alert("Erro", "Erro ao tentar logar.");
+          Alert.alert("erro", "erro de logar.");
         }
       });
   };
@@ -38,9 +38,9 @@ export default function App() {
   // Carregar produtos quando entrar na Home
   useEffect(() => {
     if (tela === 'home') {
-      axios.get('http://172.26.17.143:3000/produtos')
+      axios.get('http://172.26.17.99:3000/produtos')
         .then(res => setListaProdutos(res.data))
-        .catch(err => console.log("Erro ao carregar produtos: ", err));
+        .catch(err => console.log("erro de carregar produtos: ", err));
     }
   }, [tela]);
 

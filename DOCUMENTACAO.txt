@@ -4,12 +4,21 @@ DOCUMENTACAO DO PROJETO: FARMACIA CENTRAL
 Este projeto e um ecossistema completo de farmacia que integra uma plataforma Web, um Aplicativo Movel e um Servidor Backend. O objetivo principal e a fidelizacao de clientes: o usuario se cadastra no site para ganhar o status de "Cliente Fidelidade" e, ao logar no App, visualiza produtos com descontos exclusivos.
 
 2. ARQUITETURA E INTERLIGACAO
-O sistema funciona de forma integrada:
-- O SITE (React) envia os dados de cadastro para o BACKEND.
-- O BACKEND (Node.js) salva no BANCO DE DADOS (MySQL) e aplica o status de fidelidade.
-- O APP (React Native) solicita o login ao BACKEND.
-- O BACKEND valida o usuario e envia a lista de produtos.
-- O APP verifica se o usuario e VIP e mostra os precos com desconto em verde.
+O sistema funciona de forma integrada seguindo uma versao simplificada do padrao MVC (Model-View-Controller):
+
+- VIEW (Visao): Sao as interfaces que o usuario ve e interage. 
+  * O Site Web (React) e o App Movel (React Native).
+- CONTROLLER (Controle): E o Servidor Backend (Node.js/Express). 
+  * Ele recebe as ordens das Views (como um clique no botao de login), processa e decide o que fazer.
+- MODEL (Modelo): E a estrutura dos dados e a persistencia.
+  * O Banco de Dados (MySQL) e as queries SQL que definem como a informacao e salva ou buscada.
+
+FLUXO DE COMUNICACAO:
+1. A VIEW (Site/App) faz uma requisicao via Axios para o CONTROLLER (Backend).
+2. O CONTROLLER recebe a requisicao, valida as regras de negocio e fala com o MODEL (Banco).
+3. O MODEL executa a acao (Salvar/Buscar) e devolve a resposta para o CONTROLLER.
+4. O CONTROLLER responde para a VIEW com os dados em formato JSON.
+5. A VIEW renderiza a informacao na tela para o usuario final.
 
 3. FUNCAO DE CADA ARQUIVO PRINCIPAL
 
@@ -46,9 +55,195 @@ PASTA farm/mobvers (APLICATIVO/MOBILE):
 - Backend: Node.js + Express
 - Frontend Web: React.js + Vite
 - Mobile: React Native + Expo
+- Comunicação: Axios (Escolhido pela facilidade no tratamento de JSON e erros HTTP)
 - Seguranca: BcryptJS (para esconder as senhas no banco)
 
-6. COMO EXECUTAR
+6. LOCALIZACAO DAS ROTAS E COMUNICACAO
+As rotas sao os pontos de conexao. Abaixo, onde cada uma e definida (Backend) e de onde e chamada (Frontend/Mobile):
+
+- ROTA: POST /cadastrar
+  * Definição (Servidor): farm/servi/index.js (Linha 25)
+  * Chamada (Site Web): farm/webvers/src/App.jsx
+  * Funcao: Recebe dados do Site, criptografa a senha e salva o usuario como VIP.
+
+- ROTA: POST /login
+  * Definição (Servidor): farm/servi/index.js (Linha 40)
+  * Chamada (App Movel): farm/mobvers/App.js
+  * Funcao: Autentica o usuario no App comparando a senha com o banco.
+
+- ROTA: GET /produtos
+  * Definição (Servidor): farm/servi/index.js (Linha 61)
+  * Chamada (App Movel): farm/mobvers/App.js
+  * Funcao: Envia a lista de medicamentos e precos para a vitrine do App.
+
+7. O QUE SAO METODOS HTTP? (GET e POST)
+Metodos sao "verbos" que dizem ao servidor o que deve ser feito com a requisicao:
+
+- GET (Obter): E usado quando queremos apenas BUSCAR informacoes do servidor. 
+  * Exemplo: O App usa GET para buscar a lista de produtos.
+- POST (Enviar): E usado quando queremos ENVIAR dados novos para o servidor processar ou salvar. 
+  * Exemplo: O Site usa POST para enviar os dados de um novo cadastro.
+  * Exemplo: O App usa POST para enviar o e-mail e a senha no login (por seguranca).
+
+8. EXEMPLOS DE CODIGO (FUNCOES E METODOS)
+
+Aqui estao os trechos que voce pode mostrar no monitor para o professor:
+
+NO BACKEND (farm/servi/index.js):
+- Exemplo de Metodo POST (Cadastro):
+  app.post('/cadastrar', (req, res) => { ... })
+- Exemplo de Metodo GET (Produtos):
+  app.get('/produtos', (req, res) => { ... })
+
+NO SITE (farm/webvers/src/App.jsx):
+- Funcao de envio de dados:
+  const salvar = (e) => {
+     axios.post('http://localhost:3000/cadastrar', { nome, email, senha })
+  }
+
+NO APP (farm/mobvers/App.js):
+- Funcao de Login:
+  const logar = () => {
+     axios.post('URL/login', { email, senha })
+  }
+- Funcao de busca de produtos:
+  useEffect(() => {
+     axios.get('URL/produtos').then(...)
+  }, [])
+
+9. POSSIVEIS PERGUNTAS DO PROFESSOR (FAQ)
+
+Aqui estao as perguntas tecnicas que ele pode fazer e como voce deve responder:
+
+P: Por que usar BcryptJS para as senhas?
+R: Seguranca. Nunca devemos salvar senhas em texto puro. O Bcrypt cria um "hash" (embaralhamento) que e impossivel de reverter. Mesmo que alguem acesse o banco, nao vera a senha real.
+
+P: O que e o CORS (app.use(cors())) no backend?
+R: E uma trava de seguranca do navegador. Sem o CORS, o site (rodando em uma porta) nao conseguiria pedir dados para o servidor (rodando em outra porta). Ele libera o acesso entre dominios diferentes.
+
+P: Qual a diferenca entre React e React Native no seu projeto?
+R: O React (Web) usa componentes que viram HTML/CSS para o navegador. O React Native (App) usa componentes que viram botoes e textos nativos do Android/iOS. A logica (JavaScript) e a mesma, mas a visualizacao e diferente.
+
+P: O que e o 'useEffect' que voce usou no App?
+R: E um Hook do React que executa uma acao automaticamente. No meu caso, usei para que o App busque a lista de produtos assim que a tela "Home" for carregada, sem o usuario precisar clicar em nada.
+
+P: Por que o App usa o IP da maquina (ex: 172.26...) em vez de 'localhost'?
+R: Porque o celular (ou emulador) e um dispositivo diferente. 'Localhost' no celular seria o proprio celular. Para ele achar o servidor no computador, precisamos usar o IP da rede local.
+
+P: Como o sistema sabe se o usuario ganha desconto ou nao?
+R: Atraves da coluna 'recebe_promocao' no banco de dados. No login, o servidor envia esse valor (0 ou 1) para o App. Se for 1, o código do App faz um calculo matematico simples e mostra o preco verde.
+
+P: Voce usou 'bcrypt.hashSync'. Qual o impacto de usar funcoes sincronas no Node.js?
+R: O Node.js e single-threaded. Funcoes "Sync" bloqueiam o Event Loop. Para um projeto pequeno, nao ha problema, mas em um sistema real com milhares de acessos, o ideal e usar a versao assincrona (com await) para nao travar o servidor enquanto a senha e processada.
+
+P: Como voce preveniu ataques de SQL Injection no seu codigo?
+R: Utilizando "Prepared Statements" (os pontos de interrogacao '?' nas queries). O driver 'mysql2' faz o "escape" dos caracteres especiais, impedindo que um invasor digite comandos SQL no campo de login para burlar o sistema.
+
+P: O que faz o middleware 'express.json()'?
+R: Ele e um parser. Sem ele, o servidor nao conseguiria ler o corpo (body) das requisicoes POST vindas do Axios. Ele transforma os dados brutos recebidos em um objeto JavaScript acessivel via 'req.body'.
+
+P: Por que usar 'mysql.createConnection' em vez de um 'Pool' de conexoes?
+R: No projeto acadêmico, uma conexao simples e suficiente. Em producao, um 'Pool' seria melhor para reaproveitar conexoes e suportar multiplos usuarios simultaneos sem sobrecarregar o MySQL.
+
+P: No React, o que acontece se voce nao passar o array de dependencias [] no 'useEffect'?
+R: Ele executaria em LOOP INFINITO. O array vazio [] diz ao React para executar a funcao apenas UMA VEZ, logo apos a montagem do componente (mount).
+
+P: Por que o uso de Arrow Functions ( => ) no seu codigo?
+R: Elas sao mais modernas (ES6) e possuem escopo de 'this' léxico, o que evita erros comuns de contexto no JavaScript, alem de deixar o codigo mais conciso.
+
+P: Por que usar 'DECIMAL(10,2)' no banco para os precos em vez de 'FLOAT'?
+R: Precisao matematica. O FLOAT pode ter erros de arredondamento em calculos financeiros. Em uma farmacia, onde centavos importam, o DECIMAL garante que o valor armazenado seja exatamente o valor real, evitando prejuizos ou erros em notas fiscais.
+
+P: No App, por que voce usou 'FlatList' para listar os remedios em vez de um '.map()'?
+R: Performance. O 'FlatList' renderiza apenas os itens que estao visiveis na tela (Lazy Loading). Se a farmacia tivesse 5.000 remedios, o '.map()' tentaria carregar todos de uma vez, travando o celular. O FlatList economiza memoria e processamento.
+
+P: Como o codigo do App decide qual preco mostrar (Normal ou Desconto)?
+R: Atraves de uma "Renderizacao Condicional". No arquivo App.js, ha um 'if' (operador ternario) que verifica 'usuarioLogado.recebe_promocao === 1'. Se for verdadeiro, o código renderiza dois blocos de texto (preco antigo e novo); se falso, renderiza apenas o preco normal.
+
+P: Onde esta a regra de negocio que define que todo cadastro ganha desconto?
+R: Esta no Backend (index.js), na query da rota '/cadastrar'. Eu forcei o valor '1' no campo 'recebe_promocao' diretamente no comando SQL (INSERT INTO ... VALUES (..., 1)). Isso garante que a regra seja aplicada no servidor, independente do que venha do frontend.
+
+P: Se a farmacia quiser mudar o desconto de um remedio, voce precisa mexer no codigo do App?
+R: Nao. Como o App consome uma API assincrona, qualquer alteracao feita na tabela 'produtos' do MySQL sera refletida automaticamente no App na proxima vez que a lista for carregada. Isso e o que chamamos de "Conteudo Dinamico".
+
+P: Como voce tratou o estado de "Carregando" ou erros de rede no App?
+R: Utilizei o bloco '.catch' do Axios. Se o servidor estiver desligado ou o IP estiver errado, o código dispara um 'Alert.alert' informando o erro ao usuario, em vez de simplesmente travar o aplicativo com uma tela branca.
+
+P: Por que usar 'useState' para controlar os campos de e-mail e senha em vez de uma biblioteca de formulários?
+R: Como o projeto é inicial, o 'useState' é a forma mais direta e simples de capturar o que o usuário digita. Bibliotecas como Formik ou React Hook Form seriam complexidade desnecessária para apenas dois ou três campos.
+
+P: Por que voce deixou o Backend, o Web e o Mobile em pastas separadas?
+R: Organizacao. Cada um tem suas proprias dependencias (package.json). O Web roda no navegador (Vite), o Mobile roda no celular (Expo) e o Backend roda no servidor (Node). Misturar tudo causaria conflitos de pacotes.
+
+P: O que acontece se o usuario tentar se cadastrar com um e-mail que ja existe?
+R: O banco de dados vai retornar um erro (devido à constraint UNIQUE). No Backend, esse erro e capturado e enviamos uma resposta de erro para o Frontend, que avisa o usuario que o e-mail ja esta em uso.
+
+P: Por que usar 'bcrypt.compareSync' e nao a versao com 'await/async'?
+R: No estágio atual do projeto, a versão síncrona é mais fácil de ler e entender o fluxo, sem precisar lidar com promessas complexas. Como o volume de usuários é baixo, o impacto na performance é imperceptível.
+
+P: Se a farmacia tiver 10 unidades em cidades diferentes, como o banco lidaria com isso?
+R: Precisariamos criar uma nova tabela 'unidades' e relacionar os produtos e estoques a cada unidade atraves de chaves estrangeiras (Foreign Keys). O banco atual e focado em uma loja unica.
+
+P: Por que voce usou 'console.log' em varias partes do codigo?
+R: Para depuracao (debug). E a forma mais simples de um iniciante ver se os dados estao chegando corretamente da API ou se houve algum erro no meio do caminho durante o desenvolvimento.
+
+P: Como voce definiu as cores e o estilo do App (StyleSheet)?
+R: Usei cores que remetem a saude e confianca (Azul e Verde). O 'StyleSheet.create' do React Native funciona de forma parecida com o CSS, mas usando objetos JavaScript para estilizar cada componente individualmente.
+
+P: Se voce quisesse colocar esse sistema na internet de verdade, o que precisaria fazer?
+R: Precisaria hospedar o banco (ex: AWS ou Google Cloud), o Backend (ex: Heroku ou Vercel) e publicar o App nas lojas (Google Play/App Store). Tambem precisaria trocar os IPs locais por uma URL real com HTTPS.
+
+P: O banco de dados está normalizado? Em qual forma normal ele se encontra?
+R: Sim, o banco está na 3ª Forma Normal (3FN). Cada tabela tem uma chave primária única, não há grupos repetidos e todas as colunas dependem exclusivamente da chave primária daquela tabela. Por exemplo, informações de produtos e usuários estão em tabelas separadas e bem definidas.
+
+P: Por que usar a constraint 'UNIQUE' no campo de e-mail?
+R: Para garantir a integridade dos dados e evitar duplicidade. Isso impede que dois usuários diferentes se cadastrem com o mesmo e-mail, o que causaria erros no momento do login e na recuperação de dados.
+
+P: Qual a importância do 'AUTO_INCREMENT' nas chaves primárias (ID)?
+R: Ele garante que cada novo registro receba um identificador único e sequencial automaticamente pelo MySQL. Isso facilita a organização e evita que o desenvolvedor tenha que gerenciar manualmente os IDs a cada inserção.
+
+P: Como voce escolheria quais colunas indexar se o sistema crescesse?
+R: Eu criaria índices nas colunas usadas frequentemente em filtros e buscas (cláusulas WHERE), como o 'email' na tabela de usuários e o 'nome' na tabela de produtos. Isso tornaria as consultas muito mais rápidas em bancos de dados grandes.
+
+P: Por que usar o tipo 'TEXT' para a descrição do produto e 'VARCHAR(100)' para o nome?
+R: O 'VARCHAR(100)' é mais performático para textos curtos e conhecidos, economizando espaço. O 'TEXT' é ideal para descrições longas, pois permite armazenar uma quantidade muito maior de caracteres sem um limite rígido e curto.
+
+P: Qual motor de armazenamento (Storage Engine) o MySQL utiliza por padrão?
+R: O InnoDB. Ele é o padrão moderno do MySQL porque suporta transações (ACID), chaves estrangeiras e possui uma recuperação de falhas muito superior ao antigo MyISAM.
+
+P: O seu projeto segue os principios da arquitetura REST?
+R: Sim. Ele utiliza os metodos HTTP padronizados (GET e POST) para realizar operacoes sobre recursos (usuarios e produtos) e se comunica atraves do formato JSON, que e a base de uma API RESTful.
+
+P: Por que usar 'res.status(401).send(...)' em vez de apenas enviar uma mensagem de erro?
+R: Semantica HTTP. O codigo 401 indica especificamente "Não Autorizado". Isso permite que o Frontend (Axios) entenda programaticamente que o erro foi de credenciais, e nao uma queda do servidor (que seria 500).
+
+P: O seu servidor guarda o "estado" do usuario? (O que e Stateless?)
+R: No momento, o servidor e "Stateless" (sem estado). Ele nao lembra quem e o usuario entre uma requisicao e outra. Em um sistema de grande porte, usariamos JWT (JSON Web Token) para manter a sessao do usuario de forma segura sem sobrecarregar a memoria do servidor.
+
+P: Para que serve o arquivo 'package.json' e a pasta 'node_modules'?
+R: O 'package.json' e o manifesto do projeto, contendo metadados e a lista de dependencias. A 'node_modules' e onde o NPM baixa e armazena fisicamente essas bibliotecas. Nunca devemos enviar a 'node_modules' para o GitHub (usamos o .gitignore para isso).
+
+P: Por que escolher Node.js para o Backend em vez de PHP ou Java?
+R: Principalmente pela escalabilidade e velocidade de desenvolvimento. O Node.js usa I/O nao bloqueante, o que permite lidar com muitas conexoes simultaneas de forma leve. Alem disso, permite usar a mesma linguagem (JavaScript) no Frontend e no Backend.
+
+P: Como o Express gerencia as rotas internamente?
+R: Atraves de um sistema de roteamento baseado em pilhas de middlewares. Quando uma requisicao chega, o Express percorre as rotas definidas no 'index.js' ate encontrar uma que coincida com o metodo e o caminho (URL) solicitado.
+
+10. DICAS DE ERROS (SE O APP NAO CONECTAR)
+
+Se aparecer "Network Error" ou "Connection Timed Out" no celular:
+- O IP da sua maquina mudou. No Windows, abra o CMD, digite 'ipconfig' e veja o "Endereco IPv4".
+- Va no arquivo 'farm/mobvers/App.js' e troque o numero que esta no 'axios.post' e no 'axios.get' pelo seu novo IP.
+- Verifique se o seu celular e o seu computador estao conectados NA MESMA REDE WI-FI. Se estiverem em redes diferentes, eles nao se conversam.
+
+11. POR QUE USAR AXIOS?
+
+O Axios foi utilizado em vez do 'fetch' nativo por:
+- Transformacao automatica de dados para JSON.
+- Melhor tratamento de erros (identifica falhas de login 401 ou rede automaticamente).
+- Codigo mais limpo e padronizado tanto no Site quanto no App.
+
+8. COMO EXECUTAR
 1. Importar 'database.sql' no MySQL.
 2. Iniciar o Servidor: Pasta 'servi' -> 'node index.js'.
 3. Iniciar o Site: Pasta 'webvers' -> 'npm run dev'.

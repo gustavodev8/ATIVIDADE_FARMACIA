@@ -6,7 +6,6 @@ function App() {
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
-
   const salvar = (e) => {
     e.preventDefault();
     axios.post('http://localhost:3000/cadastrar', { nome, email, senha })
